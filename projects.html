@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Projects — ProGroup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0a0a0f; --surface: #13131a; --surface2: #1c1c27;
+    --accent: #c8f542; --accent2: #42f5c8; --text: #f0efea;
+    --muted: #7a7a8a; --border: rgba(255,255,255,0.07);
+    --mono: 'DM Mono', monospace; --serif: 'Playfair Display', serif; --sans: 'DM Sans', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); overflow-x: hidden; }
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.5;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  }
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.2rem 3rem; border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(16px); background: rgba(10,10,15,0.7);
+  }
+  .nav-logo { font-family: var(--mono); font-size: 14px; font-weight: 500; letter-spacing: 0.08em; color: var(--accent); text-decoration: none; }
+  .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+  .nav-links a { font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em; color: var(--muted); text-decoration: none; text-transform: uppercase; transition: color 0.2s; }
+  .nav-links a:hover, .nav-links a.active { color: var(--text); }
+  .nav-links a.active { color: var(--accent); }
+
+  .page-hero {
+    padding: 10rem 3rem 4rem;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em; color: var(--accent); text-transform: uppercase; margin-bottom: 1rem; }
+  .page-title { font-family: var(--serif); font-size: clamp(3rem, 6vw, 5.5rem); font-weight: 900; line-height: 1; }
+  .page-title span { color: transparent; -webkit-text-stroke: 1px rgba(200,245,66,0.5); }
+  .page-desc { font-size: 17px; color: var(--muted); font-weight: 300; max-width: 500px; margin-top: 1rem; }
+
+  .filter-bar {
+    padding: 2rem 3rem;
+    display: flex; gap: 0.75rem; flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 63px; z-index: 50;
+    background: rgba(10,10,15,0.85); backdrop-filter: blur(12px);
+  }
+  .filter-btn {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 6px 14px; border: 1px solid var(--border); border-radius: 2px;
+    color: var(--muted); background: transparent; cursor: pointer; transition: all 0.15s;
+  }
+  .filter-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+  .filter-btn.on { background: var(--accent); color: #0a0a0f; border-color: var(--accent); }
+
+  .projects-section { padding: 3rem; }
+  .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+
+  .project-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 4px;
+    padding: 2rem; display: flex; flex-direction: column; gap: 1rem;
+    text-decoration: none; color: inherit; position: relative; overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+    opacity: 0; animation: fadeUp 0.5s forwards;
+  }
+  .project-card:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-3px); }
+  .project-card::before {
+    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transform: scaleX(0); transform-origin: left; transition: transform 0.3s;
+  }
+  .project-card:hover::before { transform: scaleX(1); }
+
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .tag {
+    display: inline-block; font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 8px;
+    border-radius: 2px; background: rgba(200,245,66,0.08); color: var(--accent);
+  }
+  .tag.lang { background: rgba(66,245,200,0.08); color: var(--accent2); }
+  .tag.content { background: rgba(245,167,66,0.08); color: #f5a742; }
+  .tag.tool { background: rgba(200,66,245,0.08); color: #c842f5; }
+
+  .card-icon { font-size: 24px; }
+  .card-name { font-family: var(--serif); font-size: 1.5rem; font-weight: 700; line-height: 1.2; }
+  .card-desc { font-size: 14px; color: var(--muted); font-weight: 300; line-height: 1.6; flex: 1; }
+  .card-meta { display: flex; align-items: center; justify-content: space-between; margin-top: auto; }
+  .card-stack { display: flex; gap: 6px; flex-wrap: wrap; }
+  .stack-pill { font-family: var(--mono); font-size: 10px; color: var(--muted); padding: 2px 6px; border: 1px solid var(--border); border-radius: 2px; }
+  .card-arrow { color: var(--accent); font-size: 18px; transition: transform 0.2s; }
+  .project-card:hover .card-arrow { transform: translate(3px, -3px); }
+
+  .project-card[data-cat].hidden { display: none; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  footer {
+    border-top: 1px solid var(--border); padding: 2rem 3rem;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--mono); font-size: 11px; color: var(--muted);
+  }
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.5rem; } .nav-links { display: none; }
+    .page-hero, .projects-section, .filter-bar { padding-left: 1.5rem; padding-right: 1.5rem; }
+    footer { flex-direction: column; gap: 1rem; text-align: center; }
+  }
+.nav-signin { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; color: #0a0a0f; background: var(--accent); padding: 7px 16px; border-radius: 2px; text-decoration: none; font-weight: 500; white-space: nowrap; transition: opacity 0.2s; } .nav-signin:hover { opacity: 0.85; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">PG_24</a>
+  <ul class="nav-links">
+    <li><a href="projects.html" class="active">Projects</a></li>
+    <li><a href="lel.html">LEL</a></li>
+    <li><a href="blog.html">Blog</a></li>
+    <li><a href="contact.html">Contact</a></li>
+  </ul>
+  <a href="auth.html" class="nav-signin">Sign In</a>
+</nav>
+
+<div class="page-hero">
+  <p class="eyebrow">// 01 · Work</p>
+  <h1 class="page-title">All <span>Projects</span></h1>
+  <p class="page-desc">Everything I've built — from programming languages to tools and experiments.</p>
+</div>
+
+<div class="filter-bar">
+  <button class="filter-btn on" onclick="filter('all', this)">All</button>
+  <button class="filter-btn" onclick="filter('lang', this)">Languages</button>
+  <button class="filter-btn" onclick="filter('tool', this)">Tools</button>
+  <button class="filter-btn" onclick="filter('content', this)">Content</button>
+</div>
+
+<div class="projects-section">
+  <div class="projects-grid" id="grid">
+
+    <a href="lel.html" class="project-card" data-cat="lang" style="animation-delay:0.05s">
+      <div class="card-top">
+        <span class="tag lang">Language</span>
+        <span class="card-icon">⌨️</span>
+      </div>
+      <h2 class="card-name">LEL Language</h2>
+      <p class="card-desc">A professional programming language designed to read like natural English sentences. Strongly typed, high-performance, enterprise-ready.</p>
+      <div class="card-meta">
+        <div class="card-stack">
+          <span class="stack-pill">Python 3.7+</span>
+          <span class="stack-pill">Open Source</span>
+        </div>
+        <span class="card-arrow">↗</span>
+      </div>
+    </a>
+
+    <a href="https://github.com/ProGroupco" class="project-card" data-cat="tool" target="_blank" style="animation-delay:0.1s">
+      <div class="card-top">
+        <span class="tag tool">Tool</span>
+        <span class="card-icon">🔧</span>
+      </div>
+      <h2 class="card-name">Dev Tools</h2>
+      <p class="card-desc">Various utilities and developer tools published on GitHub. Built to solve real problems I ran into while coding.</p>
+      <div class="card-meta">
+        <div class="card-stack">
+          <span class="stack-pill">GitHub</span>
+        </div>
+        <span class="card-arrow">↗</span>
+      </div>
+    </a>
+
+    <a href="https://youtube.com/@ProGroup_24" class="project-card" data-cat="content" target="_blank" style="animation-delay:0.15s">
+      <div class="card-top">
+        <span class="tag content">Content</span>
+        <span class="card-icon">▶</span>
+      </div>
+      <h2 class="card-name">YouTube Channel</h2>
+      <p class="card-desc">Dev tutorials, software deep-dives, and behind-the-scenes of building LEL and other projects. Subscribe for new content.</p>
+      <div class="card-meta">
+        <div class="card-stack">
+          <span class="stack-pill">@ProGroup_24</span>
+        </div>
+        <span class="card-arrow">↗</span>
+      </div>
+    </a>
+
+    <a href="https://github.com/ProGroupco" class="project-card" data-cat="tool" target="_blank" style="animation-delay:0.2s">
+      <div class="card-top">
+        <span class="tag tool">Open Source</span>
+        <span class="card-icon">🌐</span>
+      </div>
+      <h2 class="card-name">GitHub Repos</h2>
+      <p class="card-desc">All my open-source experiments, scripts, and side projects live here. Stars and contributions welcome.</p>
+      <div class="card-meta">
+        <div class="card-stack">
+          <span class="stack-pill">@ProGroupco</span>
+        </div>
+        <span class="card-arrow">↗</span>
+      </div>
+    </a>
+
+  </div>
+</div>
+
+<footer>
+  <span>© 2026 ProGroup_24</span>
+  <a href="index.html" style="color:var(--muted);text-decoration:none;">← Back home</a>
+</footer>
+
+<script>
+function filter(cat, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  document.querySelectorAll('.project-card').forEach(card => {
+    if (cat === 'all' || card.dataset.cat === cat) card.classList.remove('hidden');
+    else card.classList.add('hidden');
+  });
+}
+</script>
+</body>
+</html>

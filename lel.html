@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LEL Language — ProGroup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0a0a0f; --surface: #13131a; --surface2: #1c1c27;
+    --accent: #c8f542; --accent2: #42f5c8; --text: #f0efea;
+    --muted: #7a7a8a; --border: rgba(255,255,255,0.07);
+    --mono: 'DM Mono', monospace; --serif: 'Playfair Display', serif; --sans: 'DM Sans', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); overflow-x: hidden; line-height: 1.7; }
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.5;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  }
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.2rem 3rem; border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(16px); background: rgba(10,10,15,0.7);
+  }
+  .nav-logo { font-family: var(--mono); font-size: 14px; font-weight: 500; letter-spacing: 0.08em; color: var(--accent); text-decoration: none; }
+  .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+  .nav-links a { font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em; color: var(--muted); text-decoration: none; text-transform: uppercase; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--text); }
+  .nav-links a.active { color: var(--accent); }
+
+  /* HERO */
+  .lel-hero {
+    min-height: 100vh; display: flex; flex-direction: column; justify-content: center;
+    padding: 8rem 3rem 4rem; position: relative; overflow: hidden;
+  }
+  .lel-glow {
+    position: absolute; width: 700px; height: 700px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(66,245,200,0.07) 0%, transparent 70%);
+    top: -200px; right: -200px; pointer-events: none;
+  }
+  .lel-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
+    padding: 6px 14px; border: 1px solid rgba(66,245,200,0.3); border-radius: 2px;
+    color: var(--accent2); margin-bottom: 2rem; width: fit-content;
+    animation: fadeUp 0.6s 0.2s both;
+  }
+  .lel-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent2); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+  .lel-title { font-family: var(--serif); font-size: clamp(4rem, 9vw, 8rem); font-weight: 900; line-height: 0.9; animation: fadeUp 0.7s 0.35s both; }
+  .lel-title .sub { font-size: clamp(1.2rem, 2.5vw, 2rem); color: var(--muted); font-weight: 400; font-style: italic; display: block; margin-top: 0.5rem; }
+
+  .lel-tagline { font-size: 20px; color: var(--muted); font-weight: 300; max-width: 520px; margin-top: 2rem; animation: fadeUp 0.7s 0.5s both; }
+  .lel-tagline strong { color: var(--text); font-weight: 400; }
+
+  .lel-ctas { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 2.5rem; animation: fadeUp 0.7s 0.65s both; }
+  .btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px; background: var(--accent); color: #0a0a0f; font-family: var(--mono); font-size: 13px; font-weight: 500; letter-spacing: 0.06em; text-decoration: none; border-radius: 2px; transition: transform 0.15s, box-shadow 0.15s; }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(200,245,66,0.25); }
+  .btn-outline { display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px; border: 1px solid var(--border); color: var(--text); font-family: var(--mono); font-size: 13px; letter-spacing: 0.06em; text-decoration: none; border-radius: 2px; transition: border-color 0.2s, background 0.2s; }
+  .btn-outline:hover { border-color: rgba(255,255,255,0.2); background: var(--surface); }
+
+  .req-pill {
+    display: inline-flex; align-items: center; gap: 6px; margin-top: 1.5rem;
+    font-family: var(--mono); font-size: 12px; color: var(--muted);
+    padding: 5px 12px; border: 1px solid var(--border); border-radius: 20px; width: fit-content;
+    animation: fadeUp 0.7s 0.8s both;
+  }
+  .req-pill span { color: var(--accent); }
+
+  @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+  /* FEATURES */
+  .features { padding: 5rem 3rem; border-top: 1px solid var(--border); }
+  .section-label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em; color: var(--accent); text-transform: uppercase; margin-bottom: 1rem; }
+  .section-title { font-family: var(--serif); font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 700; line-height: 1.1; margin-bottom: 3rem; }
+
+  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; }
+  .feature-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 2rem; }
+  .feature-icon { font-size: 28px; margin-bottom: 1rem; }
+  .feature-name { font-family: var(--serif); font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .feature-desc { font-size: 14px; color: var(--muted); font-weight: 300; line-height: 1.6; }
+
+  /* CODE EXAMPLES */
+  .examples { padding: 5rem 3rem; border-top: 1px solid var(--border); }
+  .examples-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; margin-top: 3rem; }
+
+  .example-tabs { display: flex; gap: 4px; margin-bottom: 0; }
+  .ex-tab { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 6px 14px; border: 1px solid var(--border); border-bottom: none; border-radius: 2px 2px 0 0; color: var(--muted); background: transparent; cursor: pointer; transition: all 0.15s; }
+  .ex-tab.on { background: var(--surface); color: var(--accent); border-color: rgba(255,255,255,0.12); }
+
+  .code-block {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 0 4px 4px 4px;
+    padding: 1.5rem; font-family: var(--mono); font-size: 13px; line-height: 1.8;
+    min-height: 240px;
+  }
+  .code-panel { display: none; }
+  .code-panel.on { display: block; }
+
+  .c-comment { color: #3e3e58; }
+  .c-kw { color: var(--accent); }
+  .c-fn { color: var(--accent2); }
+  .c-str { color: #f5a742; }
+  .c-num { color: #f542b0; }
+  .c-type { color: #c842f5; }
+
+  .vs-block { }
+  .vs-label { font-family: var(--mono); font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 0.75rem; }
+  .vs-code { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 1.25rem; font-family: var(--mono); font-size: 13px; line-height: 1.8; margin-bottom: 1.5rem; }
+  .vs-code.lel { border-color: rgba(200,245,66,0.2); }
+  .vs-code.py { opacity: 0.6; }
+
+  /* INSTALL */
+  .install { padding: 5rem 3rem; border-top: 1px solid var(--border); background: var(--surface); }
+  .install-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; margin-top: 3rem; }
+  .install-step { display: flex; gap: 1.25rem; align-items: flex-start; margin-bottom: 2rem; }
+  .step-num { font-family: var(--mono); font-size: 11px; color: var(--accent); background: rgba(200,245,66,0.1); border: 1px solid rgba(200,245,66,0.2); border-radius: 2px; padding: 4px 8px; white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+  .step-title { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+  .step-desc { font-size: 14px; color: var(--muted); font-weight: 300; }
+  .terminal { background: #000; border: 1px solid var(--border); border-radius: 6px; padding: 1.25rem; font-family: var(--mono); font-size: 13px; }
+  .t-bar { display: flex; gap: 6px; margin-bottom: 1rem; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.r { background: #ff5f57; } .dot.y { background: #ffbd2e; } .dot.g { background: #28c840; }
+  .t-line { line-height: 2; }
+  .t-prompt { color: var(--accent); }
+  .t-cmd { color: var(--text); }
+  .t-out { color: var(--muted); }
+
+  footer { border-top: 1px solid var(--border); padding: 2rem 3rem; display: flex; justify-content: space-between; align-items: center; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.5rem; } .nav-links { display: none; }
+    .lel-hero, .features, .examples, .install { padding-left: 1.5rem; padding-right: 1.5rem; }
+    .examples-layout, .install-grid { grid-template-columns: 1fr; }
+    footer { flex-direction: column; gap: 1rem; text-align: center; }
+  }
+.nav-signin { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; color: #0a0a0f; background: var(--accent); padding: 7px 16px; border-radius: 2px; text-decoration: none; font-weight: 500; white-space: nowrap; transition: opacity 0.2s; } .nav-signin:hover { opacity: 0.85; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">PG_24</a>
+  <ul class="nav-links">
+    <li><a href="projects.html">Projects</a></li>
+    <li><a href="lel.html" class="active">LEL</a></li>
+    <li><a href="blog.html">Blog</a></li>
+    <li><a href="contact.html">Contact</a></li>
+  </ul>
+  <a href="auth.html" class="nav-signin">Sign In</a>
+</nav>
+
+<div class="lel-hero">
+  <div class="lel-glow"></div>
+  <div class="lel-badge">Live Project</div>
+  <h1 class="lel-title">LEL<span class="sub">Like English Language</span></h1>
+  <p class="lel-tagline">A programming language where code reads like <strong>natural English</strong>. Strongly typed, high-performance, and built for everyone.</p>
+  <div class="lel-ctas">
+    <a href="https://lelofficial.github.io" class="btn-primary" target="_blank">Visit LEL Docs →</a>
+    <a href="auth.html" class="btn-outline" id="download-btn" onclick="checkAuth(event)">⬇ Download</a>
+  </div>
+  <div class="req-pill">Requires <span>Python 3.7+</span> · Free & Open Source</div>
+</div>
+
+<section class="features">
+  <p class="section-label">// Why LEL</p>
+  <h2 class="section-title">Built Different</h2>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🗣️</div>
+      <h3 class="feature-name">Natural Syntax</h3>
+      <p class="feature-desc">Write code that reads exactly like English sentences. No cryptic symbols — just clear, human-readable logic.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔒</div>
+      <h3 class="feature-name">Strongly Typed</h3>
+      <p class="feature-desc">Catch bugs early. LEL enforces types at compile time, keeping your programs safe and predictable.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🚀</div>
+      <h3 class="feature-name">High Performance</h3>
+      <p class="feature-desc">Compiled for speed. LEL is designed to run fast without sacrificing the clarity of its English-like syntax.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🏢</div>
+      <h3 class="feature-name">Enterprise Ready</h3>
+      <p class="feature-desc">Professional-grade tooling and structure. Built to scale from small scripts to full enterprise applications.</p>
+    </div>
+  </div>
+</section>
+
+<section class="examples">
+  <p class="section-label">// Examples</p>
+  <h2 class="section-title">See It In Action</h2>
+  <div class="examples-layout">
+
+    <div>
+      <div class="example-tabs">
+        <button class="ex-tab on" onclick="showTab('hello', this)">Hello World</button>
+        <button class="ex-tab" onclick="showTab('func', this)">Functions</button>
+        <button class="ex-tab" onclick="showTab('loop', this)">Loops</button>
+      </div>
+      <div class="code-block">
+        <div class="code-panel on" id="tab-hello">
+          <div><span class="c-comment">// Your first LEL program</span></div>
+          <div><span class="c-kw">Say</span> <span class="c-str">"Hello, World!"</span>;</div>
+        </div>
+        <div class="code-panel" id="tab-func">
+          <div><span class="c-comment">// Define a function</span></div>
+          <div><span class="c-kw">Make Function</span> <span class="c-fn">greet</span>(name) {</div>
+          <div>&nbsp;&nbsp;<span class="c-kw">Say</span> <span class="c-str">"Hello, "</span> + name;</div>
+          <div>}</div>
+          <div>&nbsp;</div>
+          <div><span class="c-comment">// Call it</span></div>
+          <div><span class="c-kw">Use</span> <span class="c-fn">greet</span>(<span class="c-str">"World"</span>);</div>
+        </div>
+        <div class="code-panel" id="tab-loop">
+          <div><span class="c-comment">// Loop through numbers</span></div>
+          <div><span class="c-kw">Make</span> i = <span class="c-num">1</span>;</div>
+          <div><span class="c-kw">While</span> i &lt;= <span class="c-num">5</span> {</div>
+          <div>&nbsp;&nbsp;<span class="c-kw">Say</span> i;</div>
+          <div>&nbsp;&nbsp;i = i + <span class="c-num">1</span>;</div>
+          <div>}</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="vs-label">LEL vs Python — same logic, different feel</div>
+      <div class="vs-label" style="color:var(--accent);margin-top:0">LEL</div>
+      <div class="vs-code lel">
+        <div><span class="c-kw">Make Function</span> <span class="c-fn">add</span>(a, b) {</div>
+        <div>&nbsp;&nbsp;<span class="c-kw">Give Back</span> a + b;</div>
+        <div>}</div>
+        <div><span class="c-kw">Make</span> result = <span class="c-fn">add</span>(<span class="c-num">10</span>, <span class="c-num">5</span>);</div>
+        <div><span class="c-kw">Say</span> result;</div>
+      </div>
+      <div class="vs-label">Python equivalent</div>
+      <div class="vs-code py">
+        <div>def add(a, b):</div>
+        <div>&nbsp;&nbsp;return a + b</div>
+        <div>&nbsp;</div>
+        <div>result = add(10, 5)</div>
+        <div>print(result)</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="install">
+  <p class="section-label">// Get Started</p>
+  <h2 class="section-title">Install LEL</h2>
+  <div class="install-grid">
+    <div>
+      <div class="install-step">
+        <span class="step-num">01</span>
+        <div>
+          <div class="step-title">Install Python</div>
+          <div class="step-desc">LEL requires Python 3.7 or later. Download it from python.org if you haven't already.</div>
+        </div>
+      </div>
+      <div class="install-step">
+        <span class="step-num">02</span>
+        <div>
+          <div class="step-title">Download LEL</div>
+          <div class="step-desc">Grab the latest release from the LEL downloads page at lelofficial.github.io/Downloads.</div>
+        </div>
+      </div>
+      <div class="install-step">
+        <span class="step-num">03</span>
+        <div>
+          <div class="step-title">Write your first program</div>
+          <div class="step-desc">Create a <code style="font-family:var(--mono);font-size:12px;color:var(--accent2);">.lel</code> file and run it. That's it.</div>
+        </div>
+      </div>
+      <a href="auth.html" class="btn-primary" id="install-download" onclick="checkAuth(event)" style="margin-top:1rem;display:inline-flex;">⬇ Download LEL (free account required)</a>
+    </div>
+    <div class="terminal">
+      <div class="t-bar">
+        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+      </div>
+      <div class="t-line"><span class="t-prompt">$ </span><span class="t-cmd">python lel.py hello.lel</span></div>
+      <div class="t-line"><span class="t-out">Running hello.lel...</span></div>
+      <div class="t-line"><span class="t-out">Hello, World!</span></div>
+      <div class="t-line">&nbsp;</div>
+      <div class="t-line"><span class="t-prompt">$ </span><span class="t-cmd">_</span></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span>LEL Language — by ProGroup_24</span>
+  <a href="index.html" style="color:var(--muted);text-decoration:none;">← Back home</a>
+</footer>
+
+<script>
+function showTab(id, btn) {
+  document.querySelectorAll('.code-panel').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.ex-tab').forEach(b => b.classList.remove('on'));
+  document.getElementById('tab-' + id).classList.add('on');
+  btn.classList.add('on');
+}
+</script>
+
+<!-- AUTH GATE MODAL -->
+<div id="auth-gate" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.8);backdrop-filter:blur(8px);align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid rgba(200,245,66,0.3);border-radius:8px;padding:2.5rem;max-width:380px;width:90%;text-align:center;animation:fadeUp 0.3s;">
+    <div style="font-size:2rem;margin-bottom:1rem;">⬇️</div>
+    <h3 style="font-family:var(--serif);font-size:1.6rem;font-weight:700;margin-bottom:0.75rem;">Free account required</h3>
+    <p style="font-size:14px;color:var(--muted);font-weight:300;margin-bottom:2rem;line-height:1.6;">LEL downloads are free — just sign in or create an account to access them.</p>
+    <a href="auth.html" style="display:block;padding:12px;background:var(--accent);color:#0a0a0f;font-family:var(--mono);font-size:13px;font-weight:500;letter-spacing:0.06em;text-decoration:none;border-radius:2px;margin-bottom:10px;">Sign In / Create Account →</a>
+    <button onclick="document.getElementById('auth-gate').style.display='none'" style="background:none;border:none;font-family:var(--mono);font-size:12px;color:var(--muted);cursor:pointer;">Maybe later</button>
+  </div>
+</div>
+
+<script>
+// Replace this check with real session/token verification when auth is live
+function checkAuth(e) {
+  const loggedIn = localStorage.getItem('pg_auth_user');
+  if (!loggedIn) {
+    e.preventDefault();
+    // Show gate modal
+    document.getElementById('auth-gate').style.display = 'flex';
+  } else {
+    // User is logged in, go to actual download
+    e.currentTarget.href = 'https://lelofficial.github.io/Downloads/';
+    e.currentTarget.target = '_blank';
+  }
+}
+</script>
+</body>
+</html>

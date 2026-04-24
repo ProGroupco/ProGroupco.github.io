@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ProGroup — Software & Language Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c27;
+    --accent: #c8f542;
+    --accent2: #42f5c8;
+    --text: #f0efea;
+    --muted: #7a7a8a;
+    --border: rgba(255,255,255,0.07);
+    --mono: 'DM Mono', monospace;
+    --serif: 'Playfair Display', serif;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* --- NOISE OVERLAY --- */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.6;
+  }
+
+  /* --- NAV --- */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.2rem 3rem;
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(16px);
+    background: rgba(10,10,15,0.7);
+  }
+
+  .nav-logo {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 2.5rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--text); }
+
+  /* --- HERO --- */
+  #hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-grid-line {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 1px;
+    background: var(--border);
+  }
+
+  .hero-grid-line:nth-child(1) { left: 33.3%; }
+  .hero-grid-line:nth-child(2) { left: 66.6%; }
+
+  .hero-glow {
+    position: absolute;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(200,245,66,0.06) 0%, transparent 70%);
+    top: -100px; right: -100px;
+    pointer-events: none;
+  }
+
+  .hero-glow2 {
+    position: absolute;
+    width: 400px; height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(66,245,200,0.05) 0%, transparent 70%);
+    bottom: 50px; left: 10%;
+    pointer-events: none;
+  }
+
+  .hero-eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.2s forwards;
+  }
+
+  .hero-title {
+    font-family: var(--serif);
+    font-size: clamp(3.5rem, 8vw, 7rem);
+    font-weight: 900;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    max-width: 800px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.4s forwards;
+  }
+
+  .hero-title span {
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(200,245,66,0.6);
+  }
+
+  .hero-sub {
+    margin-top: 2rem;
+    font-size: 18px;
+    color: var(--muted);
+    max-width: 480px;
+    font-weight: 300;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.6s forwards;
+  }
+
+  .hero-sub strong { color: var(--text); font-weight: 400; }
+
+  .hero-ctas {
+    margin-top: 2.5rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.8s forwards;
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 28px;
+    background: var(--accent);
+    color: #0a0a0f;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-decoration: none;
+    border-radius: 2px;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(200,245,66,0.25);
+  }
+
+  .btn-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 28px;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-decoration: none;
+    border-radius: 2px;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .btn-outline:hover {
+    border-color: rgba(255,255,255,0.2);
+    background: var(--surface);
+  }
+
+  .hero-scroll {
+    position: absolute;
+    bottom: 2.5rem;
+    left: 3rem;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .hero-scroll::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 1px;
+    background: var(--muted);
+  }
+
+  /* --- CODE BLOCK HERO --- */
+  .hero-code {
+    position: absolute;
+    right: 3rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    font-family: var(--mono);
+    font-size: 13px;
+    width: 340px;
+    opacity: 0;
+    animation: fadeLeft 0.9s 1s forwards;
+  }
+
+  .code-bar {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 1rem;
+    align-items: center;
+  }
+
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.r { background: #ff5f57; }
+  .dot.y { background: #ffbd2e; }
+  .dot.g { background: #28c840; }
+
+  .code-filename {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .code-line { line-height: 1.8; }
+  .c-comment { color: #4a4a62; }
+  .c-kw { color: var(--accent); }
+  .c-fn { color: var(--accent2); }
+  .c-str { color: #f5a742; }
+  .c-num { color: #f542b0; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeLeft {
+    from { opacity: 0; transform: translateX(20px) translateY(-50%); }
+    to { opacity: 1; transform: translateX(0) translateY(-50%); }
+  }
+
+  /* --- SECTIONS --- */
+  section {
+    padding: 6rem 3rem;
+    position: relative;
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  .section-title {
+    font-family: var(--serif);
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+  }
+
+  .section-desc {
+    color: var(--muted);
+    max-width: 520px;
+    font-size: 17px;
+    font-weight: 300;
+  }
+
+  /* --- PROJECTS --- */
+  #projects { border-top: 1px solid var(--border); }
+
+  .projects-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 3rem;
+  }
+
+  .projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .project-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .project-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s;
+  }
+
+  .project-card:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-4px); }
+  .project-card:hover::before { transform: scaleX(1); }
+
+  .project-tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    background: rgba(200,245,66,0.08);
+    color: var(--accent);
+    border-radius: 2px;
+    margin-bottom: 1rem;
+  }
+
+  .project-name {
+    font-family: var(--serif);
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    line-height: 1.2;
+  }
+
+  .project-desc {
+    font-size: 14px;
+    color: var(--muted);
+    font-weight: 300;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+  }
+
+  .project-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .project-arrow {
+    font-size: 18px;
+    color: var(--accent);
+    transition: transform 0.2s;
+  }
+
+  .project-card:hover .project-arrow { transform: translate(3px, -3px); }
+
+  /* FEATURED card */
+  .project-card.featured {
+    background: var(--surface2);
+    grid-column: span 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: center;
+  }
+
+  .project-card.featured .project-code {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.25rem;
+    font-family: var(--mono);
+    font-size: 12px;
+    overflow: hidden;
+  }
+
+  /* --- ABOUT --- */
+  #about {
+    border-top: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5rem;
+    align-items: center;
+  }
+
+  .about-number {
+    font-family: var(--serif);
+    font-size: 7rem;
+    font-weight: 900;
+    color: transparent;
+    -webkit-text-stroke: 1px var(--border);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-row {
+    display: flex;
+    gap: 2rem;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .stat { }
+  .stat-val {
+    font-family: var(--serif);
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .skills-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 1.5rem;
+  }
+
+  .skill-tag {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 5px 12px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--muted);
+    transition: border-color 0.2s, color 0.2s;
+  }
+
+  .skill-tag:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* --- CONTACT --- */
+  #contact {
+    border-top: 1px solid var(--border);
+    text-align: center;
+  }
+
+  .contact-title {
+    font-family: var(--serif);
+    font-size: clamp(3rem, 7vw, 6rem);
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 2rem;
+  }
+
+  .contact-title span { color: var(--accent); }
+
+  .contact-links {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-top: 2.5rem;
+  }
+
+  .contact-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 10px 20px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .contact-link:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+  /* --- FOOTER --- */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2rem 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* --- RESPONSIVE --- */
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.5rem; }
+    nav .nav-links { display: none; }
+    #hero { padding: 0 1.5rem; min-height: 100vh; }
+    .hero-code { display: none; }
+    .hero-title { font-size: clamp(2.8rem, 10vw, 5rem); }
+    section { padding: 4rem 1.5rem; }
+    .project-card.featured { grid-column: span 1; grid-template-columns: 1fr; }
+    .project-card.featured .project-code { display: none; }
+    #about { grid-template-columns: 1fr; gap: 2rem; }
+    footer { flex-direction: column; gap: 1rem; text-align: center; }
+    .projects-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+  }
+.nav-signin { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; color: #0a0a0f; background: var(--accent); padding: 7px 16px; border-radius: 2px; text-decoration: none; font-weight: 500; white-space: nowrap; transition: opacity 0.2s; } .nav-signin:hover { opacity: 0.85; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">PG_24</a>
+  <ul class="nav-links">
+    <li><a href="projects.html">Projects</a></li>
+    <li><a href="lel.html">LEL</a></li>
+    <li><a href="blog.html">Blog</a></li>
+    <li><a href="contact.html">Contact</a></li>
+  </ul>
+  <a href="auth.html" class="nav-signin">Sign In</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-grid-line"></div>
+  <div class="hero-grid-line"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-glow2"></div>
+
+  <p class="hero-eyebrow">// ProGroup_24 · Software & Language Design</p>
+  <h1 class="hero-title">I build<br /><span>languages.</span><br />Not just apps.</h1>
+  <p class="hero-sub">Creator of <strong>LEL</strong> — a programming language that reads like English. Software lover, open-source builder, YouTube creator.</p>
+
+  <div class="hero-ctas">
+    <a href="#projects" class="btn-primary">View Projects →</a>
+    <a href="https://youtube.com/@ProGroup_24" class="btn-outline" target="_blank">▶ YouTube</a>
+  </div>
+
+  <div class="hero-code">
+    <div class="code-bar">
+      <span class="dot r"></span>
+      <span class="dot y"></span>
+      <span class="dot g"></span>
+      <span class="code-filename">hello.lel</span>
+    </div>
+    <div class="code-line"><span class="c-comment">// LEL — Like English Language</span></div>
+    <div class="code-line"><span class="c-kw">Make Function</span> <span class="c-fn">greet</span>(name) {</div>
+    <div class="code-line">&nbsp;&nbsp;<span class="c-kw">Say</span> <span class="c-str">"Hello, "</span> + name;</div>
+    <div class="code-line">}</div>
+    <div class="code-line">&nbsp;</div>
+    <div class="code-line"><span class="c-kw">Use</span> <span class="c-fn">greet</span>(<span class="c-str">"World"</span>);</div>
+    <div class="code-line">&nbsp;</div>
+    <div class="code-line"><span class="c-comment">// Output: Hello, World</span></div>
+  </div>
+
+  <div class="hero-scroll">Scroll to explore</div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects">
+  <div class="projects-header">
+    <div>
+      <p class="section-label">// 01 · Work</p>
+      <h2 class="section-title">Featured<br />Projects</h2>
+    </div>
+    <a href="https://github.com/ProGroupco" class="btn-outline" target="_blank" style="white-space:nowrap;">GitHub →</a>
+  </div>
+
+  <div class="projects-grid">
+
+    <!-- FEATURED: LEL -->
+    <a href="https://lelofficial.github.io" class="project-card featured" target="_blank">
+      <div>
+        <span class="project-tag">Language Design</span>
+        <h3 class="project-name">LEL Language</h3>
+        <p class="project-desc">A professional programming language designed to read like natural English. Strongly typed, high-performance, and enterprise-ready. Requires Python 3.7+.</p>
+        <div class="project-meta">
+          <span>Python 3.7+ · Open Source</span>
+          <span class="project-arrow">↗</span>
+        </div>
+      </div>
+      <div class="project-code">
+        <div class="code-line"><span class="c-comment">// Natural syntax that just makes sense</span></div>
+        <div class="code-line"><span class="c-kw">Make Function</span> <span class="c-fn">add</span>(a, b) {</div>
+        <div class="code-line">&nbsp;&nbsp;<span class="c-kw">Give Back</span> a + b;</div>
+        <div class="code-line">}</div>
+        <div class="code-line">&nbsp;</div>
+        <div class="code-line"><span class="c-kw">Make</span> result = <span class="c-fn">add</span>(<span class="c-num">10</span>, <span class="c-num">5</span>);</div>
+        <div class="code-line"><span class="c-kw">Say</span> result; <span class="c-comment">// 15</span></div>
+      </div>
+    </a>
+
+    <!-- More project cards -->
+    <a href="https://github.com/ProGroupco" class="project-card" target="_blank">
+      <span class="project-tag">Open Source</span>
+      <h3 class="project-name">More on GitHub</h3>
+      <p class="project-desc">Explore all my repositories, tools, and experiments on GitHub. Always building something new.</p>
+      <div class="project-meta">
+        <span>@ProGroupco</span>
+        <span class="project-arrow">↗</span>
+      </div>
+    </a>
+
+    <a href="https://youtube.com/@ProGroup_24" class="project-card" target="_blank">
+      <span class="project-tag">Content</span>
+      <h3 class="project-name">YouTube Channel</h3>
+      <p class="project-desc">Dev content, tutorials, and software deep-dives. Sharing what I learn and build along the way.</p>
+      <div class="project-meta">
+        <span>@ProGroup_24</span>
+        <span class="project-arrow">↗</span>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div>
+    <p class="section-label">// 02 · About</p>
+    <div class="about-number">PG</div>
+    <h2 class="section-title">Software<br />Lover</h2>
+    <p class="section-desc" style="margin-top:1rem;">I created LEL — a programming language with natural English syntax — because I believe code should be readable by everyone. I build tools, share content, and contribute to open source.</p>
+
+    <div class="stat-row">
+      <div class="stat">
+        <div class="stat-val">1+</div>
+        <div class="stat-label">Lang. Created</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val">PY37</div>
+        <div class="stat-label">Min. Requirement</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val">∞</div>
+        <div class="stat-label">Things Building</div>
+      </div>
+    </div>
+
+    <div class="skills-list">
+      <span class="skill-tag">Python</span>
+      <span class="skill-tag">Language Design</span>
+      <span class="skill-tag">Compilers</span>
+      <span class="skill-tag">Open Source</span>
+      <span class="skill-tag">GitHub Pages</span>
+      <span class="skill-tag">Web Dev</span>
+    </div>
+  </div>
+
+  <div>
+    <blockquote style="border-left: 2px solid var(--accent); padding-left: 1.5rem; margin: 0;">
+      <p style="font-family: var(--serif); font-size: 1.4rem; font-style: italic; line-height: 1.5; color: var(--text);">"Code should be as easy to read as a sentence. That's why I built LEL."</p>
+      <footer style="font-family: var(--mono); font-size: 12px; color: var(--muted); margin-top: 1rem; border: none; padding: 0; display: block;">— ProGroup_24</footer>
+    </blockquote>
+
+    <div style="margin-top: 2.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 1.5rem;">
+      <p style="font-family: var(--mono); font-size: 12px; color: var(--muted); margin-bottom: 0.75rem;">// Currently working on</p>
+      <p style="font-size: 15px; color: var(--text);">Expanding LEL's standard library and building new tools for developers.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <p class="section-label" style="display:inline-block;">// 03 · Contact</p>
+  <h2 class="contact-title">Let's <span>Build</span><br />Something.</h2>
+  <p style="color: var(--muted); font-size: 17px; font-weight: 300; max-width: 400px; margin: 0 auto;">Got an idea, a collab, or just want to chat about programming languages? I'm here.</p>
+
+  <div class="contact-links">
+    <a href="https://github.com/ProGroupco" class="contact-link" target="_blank">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      GitHub
+    </a>
+    <a href="https://youtube.com/@ProGroup_24" class="contact-link" target="_blank">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+      YouTube
+    </a>
+    <a href="https://lelofficial.github.io" class="contact-link" target="_blank">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      LEL Docs
+    </a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span>© 2026 ProGroup_24</span>
+  <span>Built with intention · progroupco.github.io</span>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sign In — ProGroup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0a0a0f; --surface: #13131a; --surface2: #1c1c27;
+    --accent: #c8f542; --accent2: #42f5c8; --text: #f0efea;
+    --muted: #7a7a8a; --border: rgba(255,255,255,0.07);
+    --mono: 'DM Mono', monospace; --serif: 'Playfair Display', serif; --sans: 'DM Sans', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); overflow-x: hidden; min-height: 100vh; display: flex; flex-direction: column; }
+
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.5;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  }
+
+  /* Animated bg grid */
+  .bg-grid {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+    opacity: 0.4;
+  }
+
+  .glow-orb {
+    position: fixed; border-radius: 50%; pointer-events: none; z-index: 0;
+    filter: blur(80px);
+  }
+  .glow-orb.a { width: 500px; height: 500px; background: rgba(200,245,66,0.04); top: -100px; right: -100px; }
+  .glow-orb.b { width: 400px; height: 400px; background: rgba(66,245,200,0.04); bottom: -80px; left: -80px; }
+
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.2rem 3rem; border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(16px); background: rgba(10,10,15,0.7);
+  }
+  .nav-logo { font-family: var(--mono); font-size: 14px; font-weight: 500; letter-spacing: 0.08em; color: var(--accent); text-decoration: none; }
+  .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+  .nav-links a { font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em; color: var(--muted); text-decoration: none; text-transform: uppercase; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--text); }
+
+  /* MAIN LAYOUT */
+  .auth-wrap {
+    flex: 1; display: grid; grid-template-columns: 1fr 1fr;
+    position: relative; z-index: 1;
+  }
+
+  /* LEFT PANEL */
+  .auth-left {
+    padding: 10rem 4rem 4rem;
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; justify-content: center;
+  }
+
+  .auth-eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em; color: var(--accent); text-transform: uppercase; margin-bottom: 1.5rem; }
+  .auth-title { font-family: var(--serif); font-size: clamp(2.8rem, 4.5vw, 4.5rem); font-weight: 900; line-height: 1; margin-bottom: 1.5rem; }
+  .auth-title span { color: var(--accent); }
+  .auth-desc { font-size: 16px; color: var(--muted); font-weight: 300; max-width: 380px; line-height: 1.7; margin-bottom: 3rem; }
+
+  .perks { display: flex; flex-direction: column; gap: 1rem; }
+  .perk {
+    display: flex; align-items: flex-start; gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 4px;
+    animation: fadeUp 0.5s both;
+  }
+  .perk:nth-child(1) { animation-delay: 0.1s; }
+  .perk:nth-child(2) { animation-delay: 0.2s; }
+  .perk:nth-child(3) { animation-delay: 0.3s; }
+  .perk-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+  .perk-title { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+  .perk-desc { font-size: 12px; color: var(--muted); font-weight: 300; }
+
+  /* RIGHT PANEL */
+  .auth-right {
+    padding: 8rem 4rem 4rem;
+    display: flex; flex-direction: column; justify-content: center;
+    align-items: center;
+  }
+
+  .auth-card {
+    width: 100%; max-width: 400px;
+    animation: fadeUp 0.6s 0.15s both;
+  }
+
+  /* TABS */
+  .tab-row { display: flex; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 2rem; }
+  .tab-btn {
+    flex: 1; padding: 10px; font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em;
+    text-transform: uppercase; background: transparent; color: var(--muted);
+    border: none; cursor: pointer; transition: all 0.2s;
+  }
+  .tab-btn.on { background: var(--surface2); color: var(--accent); }
+
+  /* PROVIDER BUTTONS */
+  .provider-section { margin-bottom: 1.5rem; }
+  .provider-label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 1rem; text-align: center; }
+
+  .provider-btn {
+    width: 100%; display: flex; align-items: center; gap: 1rem;
+    padding: 13px 18px; border-radius: 4px; cursor: pointer;
+    border: 1px solid; font-family: var(--sans); font-size: 14px; font-weight: 500;
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+    margin-bottom: 10px; text-align: left; position: relative; overflow: hidden;
+  }
+  .provider-btn::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .provider-btn:hover { transform: translateY(-2px); }
+  .provider-btn:active { transform: translateY(0); opacity: 0.9; }
+
+  /* ProGroupco Auth */
+  .btn-progroup {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-color: rgba(200,245,66,0.3);
+    color: var(--text);
+  }
+  .btn-progroup:hover { box-shadow: 0 8px 24px rgba(200,245,66,0.15); border-color: rgba(200,245,66,0.6); }
+  .btn-progroup .p-icon {
+    width: 32px; height: 32px; border-radius: 6px;
+    background: var(--accent); display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-family: var(--mono); font-size: 12px; font-weight: 500; color: #0a0a0f;
+  }
+  .btn-progroup .p-sub { font-size: 11px; color: var(--muted); display: block; margin-top: 1px; }
+  .btn-progroup .p-arrow { margin-left: auto; color: var(--accent); font-size: 14px; }
+
+  /* Bro Gang AI */
+  .btn-brogang {
+    background: linear-gradient(135deg, #0d0d1a 0%, #1a0d2e 100%);
+    border-color: rgba(66,245,200,0.3);
+    color: var(--text);
+  }
+  .btn-brogang:hover { box-shadow: 0 8px 24px rgba(66,245,200,0.15); border-color: rgba(66,245,200,0.6); }
+  .btn-brogang .p-icon {
+    width: 32px; height: 32px; border-radius: 6px;
+    background: linear-gradient(135deg, var(--accent2), #7b42f5);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 16px;
+  }
+  .btn-brogang .p-sub { font-size: 11px; color: var(--muted); display: block; margin-top: 1px; }
+  .btn-brogang .p-arrow { margin-left: auto; color: var(--accent2); font-size: 14px; }
+
+  /* BROGANG brand button */
+  .btn-brogang-alt {
+    background: linear-gradient(135deg, #0d1a0d 0%, #0d2e1a 100%);
+    border-color: rgba(66,245,100,0.3);
+    color: var(--text);
+  }
+  .btn-brogang-alt:hover { box-shadow: 0 8px 24px rgba(66,245,100,0.12); border-color: rgba(66,245,100,0.5); }
+  .btn-brogang-alt .p-icon {
+    width: 32px; height: 32px; border-radius: 6px;
+    background: linear-gradient(135deg, #42f564, #42f5c8);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 16px;
+  }
+  .btn-brogang-alt .p-sub { font-size: 11px; color: var(--muted); display: block; margin-top: 1px; }
+  .btn-brogang-alt .p-arrow { margin-left: auto; color: #42f564; font-size: 14px; }
+
+  /* DIVIDER */
+  .divider { display: flex; align-items: center; gap: 1rem; margin: 1.5rem 0; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .divider span { font-family: var(--mono); font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; white-space: nowrap; }
+
+  /* EMAIL FORM */
+  .email-form { display: none; flex-direction: column; gap: 0.75rem; }
+  .email-form.on { display: flex; }
+  .form-input {
+    width: 100%; padding: 12px 16px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 2px;
+    color: var(--text); font-family: var(--sans); font-size: 15px;
+    transition: border-color 0.2s; outline: none;
+  }
+  .form-input:focus { border-color: rgba(200,245,66,0.4); }
+  .form-input::placeholder { color: var(--muted); }
+
+  .submit-btn {
+    width: 100%; padding: 13px;
+    background: var(--accent); color: #0a0a0f;
+    font-family: var(--mono); font-size: 13px; font-weight: 500; letter-spacing: 0.06em;
+    border: none; border-radius: 2px; cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .submit-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(200,245,66,0.25); }
+
+  .email-toggle {
+    font-family: var(--mono); font-size: 12px; color: var(--muted);
+    cursor: pointer; text-align: center; transition: color 0.2s;
+    text-decoration: underline; text-decoration-color: transparent;
+    transition: text-decoration-color 0.2s, color 0.2s;
+    background: none; border: none; width: 100%; margin-top: 0.5rem;
+  }
+  .email-toggle:hover { color: var(--text); text-decoration-color: var(--muted); }
+
+  .terms { font-family: var(--mono); font-size: 10px; color: var(--muted); text-align: center; margin-top: 1.5rem; line-height: 1.6; }
+  .terms a { color: var(--muted); text-decoration: underline; }
+
+  /* LOADING STATE */
+  .provider-btn.loading { pointer-events: none; opacity: 0.7; }
+  .provider-btn.loading .p-arrow::after { content: '...'; animation: dots 1s infinite; }
+  @keyframes dots { 0%,100%{content:'.'} 33%{content:'..'} 66%{content:'...'} }
+
+  /* PANEL TOGGLE */
+  .signin-panel, .signup-panel { }
+  .signup-panel { display: none; }
+  .signup-panel.on { display: block; }
+  .signin-panel.off { display: none; }
+
+  @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+  footer { border-top: 1px solid var(--border); padding: 1.5rem 3rem; display: flex; justify-content: space-between; align-items: center; font-family: var(--mono); font-size: 11px; color: var(--muted); position: relative; z-index: 1; }
+
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.5rem; } .nav-links { display: none; }
+    .auth-wrap { grid-template-columns: 1fr; }
+    .auth-left { display: none; }
+    .auth-right { padding: 8rem 1.5rem 3rem; }
+    footer { flex-direction: column; gap: 1rem; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="glow-orb a"></div>
+<div class="glow-orb b"></div>
+
+<nav>
+  <a class="nav-logo" href="index.html">PG_24</a>
+  <ul class="nav-links">
+    <li><a href="projects.html">Projects</a></li>
+    <li><a href="lel.html">LEL</a></li>
+    <li><a href="blog.html">Blog</a></li>
+    <li><a href="contact.html">Contact</a></li>
+  </ul>
+</nav>
+
+<div class="auth-wrap">
+
+  <!-- LEFT: WHY SIGN IN -->
+  <div class="auth-left">
+    <p class="auth-eyebrow">// Members</p>
+    <h1 class="auth-title">Your<br /><span>ProGroup</span><br />account.</h1>
+    <p class="auth-desc">One account across the ProGroup ecosystem — portfolio, LEL downloads, blog, and more.</p>
+
+    <div class="perks">
+      <div class="perk">
+        <span class="perk-icon">⬇️</span>
+        <div>
+          <div class="perk-title">Exclusive Downloads</div>
+          <div class="perk-desc">Access LEL releases, tools, and member-only files before anyone else.</div>
+        </div>
+      </div>
+      <div class="perk">
+        <span class="perk-icon">📝</span>
+        <div>
+          <div class="perk-title">Blog & Devlog</div>
+          <div class="perk-desc">Comment on posts, bookmark articles, and follow the build journey.</div>
+        </div>
+      </div>
+      <div class="perk">
+        <span class="perk-icon">🤖</span>
+        <div>
+          <div class="perk-title">Bro Gang AI Access</div>
+          <div class="perk-desc">Early access to Bro Gang AI features and integrations across ProGroup projects.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: AUTH CARD -->
+  <div class="auth-right">
+    <div class="auth-card">
+
+      <div class="tab-row">
+        <button class="tab-btn on" onclick="switchTab('signin', this)">Sign In</button>
+        <button class="tab-btn" onclick="switchTab('signup', this)">Create Account</button>
+      </div>
+
+      <!-- SIGN IN -->
+      <div class="signin-panel" id="panel-signin">
+        <div class="provider-section">
+          <div class="provider-label">Continue with</div>
+
+          <button class="provider-btn btn-progroup" onclick="handleAuth('ProGroupco Auth')">
+            <div class="p-icon">PG</div>
+            <div>
+              <div>ProGroupco Auth</div>
+              <span class="p-sub">Official ProGroup account</span>
+            </div>
+            <span class="p-arrow">→</span>
+          </button>
+
+          <button class="provider-btn btn-brogang" onclick="handleAuth('Bro Gang AI')">
+            <div class="p-icon">🤖</div>
+            <div>
+              <div>Bro Gang AI</div>
+              <span class="p-sub">Sign in with Bro Gang AI</span>
+            </div>
+            <span class="p-arrow">→</span>
+          </button>
+
+          <button class="provider-btn btn-brogang-alt" onclick="handleAuth('BROGANG')">
+            <div class="p-icon">🟢</div>
+            <div>
+              <div>BROGANG</div>
+              <span class="p-sub">The Bro Gang network</span>
+            </div>
+            <span class="p-arrow">→</span>
+          </button>
+        </div>
+
+        <div class="divider"><span>or use email</span></div>
+
+        <div class="email-form" id="signin-email">
+          <input type="email" class="form-input" placeholder="Email address" />
+          <input type="password" class="form-input" placeholder="Password" />
+          <button class="submit-btn">Sign In →</button>
+        </div>
+        <button class="email-toggle" onclick="toggleEmail('signin-email', this)">Sign in with email instead</button>
+      </div>
+
+      <!-- SIGN UP -->
+      <div class="signup-panel" id="panel-signup">
+        <div class="provider-section">
+          <div class="provider-label">Create account with</div>
+
+          <button class="provider-btn btn-progroup" onclick="handleAuth('ProGroupco Auth')">
+            <div class="p-icon">PG</div>
+            <div>
+              <div>ProGroupco Auth</div>
+              <span class="p-sub">Recommended</span>
+            </div>
+            <span class="p-arrow">→</span>
+          </button>
+
+          <button class="provider-btn btn-brogang" onclick="handleAuth('Bro Gang AI')">
+            <div class="p-icon">🤖</div>
+            <div>
+              <div>Bro Gang AI</div>
+              <span class="p-sub">Sign up with Bro Gang AI</span>
+            </div>
+            <span class="p-arrow">→</span>
+          </button>
+
+          <button class="provider-btn btn-brogang-alt" onclick="handleAuth('BROGANG')">
+            <div class="p-icon">🟢</div>
+            <div>
+              <div>BROGANG</div>
+              <span class="p-sub">Join the Bro Gang network</span>
+            </div>
+            <span class="p-arrow">→</span>
+          </button>
+        </div>
+
+        <div class="divider"><span>or use email</span></div>
+
+        <div class="email-form" id="signup-email">
+          <input type="text" class="form-input" placeholder="Display name" />
+          <input type="email" class="form-input" placeholder="Email address" />
+          <input type="password" class="form-input" placeholder="Password (min 8 chars)" />
+          <button class="submit-btn">Create Account →</button>
+        </div>
+        <button class="email-toggle" onclick="toggleEmail('signup-email', this)">Sign up with email instead</button>
+      </div>
+
+      <p class="terms">By continuing you agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.<br/>No spam. Your data stays yours.</p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <span>© 2026 ProGroup_24</span>
+  <a href="index.html" style="color:var(--muted);text-decoration:none;">← Back home</a>
+</footer>
+
+<script>
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('panel-signin').classList.toggle('off', tab !== 'signin');
+  const signup = document.getElementById('panel-signup');
+  signup.classList.toggle('on', tab === 'signup');
+}
+
+function toggleEmail(id, btn) {
+  const el = document.getElementById(id);
+  const isOn = el.classList.toggle('on');
+  btn.textContent = isOn ? 'Hide email form' : btn.textContent.replace('Hide email form', '') || 'Sign in with email instead';
+  if (id.includes('signup')) btn.textContent = isOn ? 'Hide email form' : 'Sign up with email instead';
+  else btn.textContent = isOn ? 'Hide email form' : 'Sign in with email instead';
+}
+
+function handleAuth(provider) {
+  // TODO: Replace with real OAuth redirect URLs when services are live
+  const endpoints = {
+    'ProGroupco Auth': 'https://auth.progroupco.github.io/oauth',   // wire up your ProGroupco Auth endpoint here
+    'Bro Gang AI':     'https://auth.brogangai.com/oauth',           // wire up Bro Gang AI OAuth here
+    'BROGANG':         'https://auth.brogang.com/oauth',             // wire up BROGANG OAuth here
+  };
+
+  const btn = event.currentTarget;
+  btn.classList.add('loading');
+
+  // Simulate redirect intent — swap this line with window.location.href = endpoints[provider]
+  setTimeout(() => {
+    alert(`[Dev mode] Would redirect to: ${endpoints[provider]}\n\nWire this up when ${provider} is live.`);
+    btn.classList.remove('loading');
+  }, 900);
+}
+</script>
+</body>
+</html>
